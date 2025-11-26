@@ -18,6 +18,8 @@ use std::{
 };
 
 use itertools::Itertools;
+#[allow(unused_imports)]
+use zenoh_core::compat::*;
 use zenoh_protocol::{
     core::WhatAmI,
     network::declare::{
@@ -382,7 +384,7 @@ impl HatPubSubTrait for Hat {
             let mres = mres.upgrade().unwrap();
 
             for (sid, ctx) in self.owned_face_contexts(&mres) {
-                if ctx.subs.is_some() && self.should_route_between(src_face, &ctx.face) {
+                if ctx.subs.is_some() && !self.owns(src_face) {
                     route.insert(*sid, || {
                         tracing::trace!(dst = %ctx.face, reason = "resource match");
                         let wire_expr = expr.get_best_key(*sid);
@@ -643,13 +645,8 @@ impl HatPubSubTrait for Hat {
     ) -> HashMap<Arc<Resource>, SubscriberInfo> {
         self.owned_faces(tables)
             .flat_map(|f| self.face_hat(f).remote_subs.values())
-            .filter_map(|sub| {
-                if sub.ctx.is_some() && res.is_none_or(|res| sub.matches(res)) {
-                    Some((sub.clone(), SubscriberInfo))
-                } else {
-                    None
-                }
-            })
+            .filter(|&sub| res.is_none_or(|res| res.matches(sub)))
+            .map(|sub| (sub.clone(), SubscriberInfo))
             .collect()
     }
 }

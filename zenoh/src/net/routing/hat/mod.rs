@@ -60,7 +60,7 @@ use crate::{
 pub(crate) mod broker;
 pub(crate) mod client;
 pub(crate) mod peer;
-// mod router;
+pub(crate) mod router;
 
 zconfigurable! {
     pub static ref TREES_COMPUTATION_DELAY_MS: u64 = 100;
@@ -342,6 +342,7 @@ pub(crate) trait HatInterestTrait {
     fn remote_interests(&self, tables: &TablesData) -> HashSet<RemoteInterest>;
 }
 
+// TODO(regions): pass msg ref
 pub(crate) trait HatPubSubTrait {
     /// Handles subscriber declaration.
     fn declare_subscription(
@@ -366,7 +367,6 @@ pub(crate) trait HatPubSubTrait {
     ///
     /// The callee hat assumes that it owns the source face.
     fn register_subscription(
-        // TOOD: pass msg
         &mut self,
         ctx: BaseContext,
         id: SubscriberId,
@@ -405,7 +405,9 @@ pub(crate) trait HatPubSubTrait {
     ///
     /// This implies that the callee hat owns the last remaining subscriber and that the penultimate
     /// subscriber was unregistered.
-    fn unpropagate_last_non_owned_subscription(&mut self, ctx: BaseContext, res: Arc<Resource>);
+    fn unpropagate_last_non_owned_subscription(&mut self, ctx: BaseContext, res: Arc<Resource>) {
+        self.unpropagate_subscription(ctx, res);
+    }
 
     fn remote_subscriptions_of(&self, res: &Resource) -> Option<SubscriberInfo>;
 
@@ -436,6 +438,7 @@ pub(crate) trait HatPubSubTrait {
     ) -> HashMap<usize, Arc<FaceState>>;
 }
 
+// TODO(regions): pass msg ref
 pub(crate) trait HatQueriesTrait {
     /// Handles queryable declaration.
     fn declare_queryable(
@@ -460,7 +463,6 @@ pub(crate) trait HatQueriesTrait {
     ///
     /// The callee hat assumes that it owns the source face.
     fn register_queryable(
-        // TOOD: pass msg
         &mut self,
         ctx: BaseContext,
         id: QueryableId,
@@ -495,7 +497,9 @@ pub(crate) trait HatQueriesTrait {
     /// Unpropagate a queryable entity.
     fn unpropagate_queryable(&mut self, ctx: BaseContext, res: Arc<Resource>);
 
-    fn unpropagate_last_non_owned_queryable(&mut self, ctx: BaseContext, res: Arc<Resource>);
+    fn unpropagate_last_non_owned_queryable(&mut self, ctx: BaseContext, res: Arc<Resource>) {
+        self.unpropagate_queryable(ctx, res);
+    }
 
     fn remote_queryables_of(&self, res: &Resource) -> Option<QueryableInfoType>;
 
@@ -527,6 +531,7 @@ pub(crate) trait HatQueriesTrait {
     ) -> HashMap<usize, Arc<FaceState>>;
 }
 
+// TODO(regions): pass msg ref
 pub(crate) trait HatTokenTrait {
     /// Handles token declaration.
     fn declare_token(
